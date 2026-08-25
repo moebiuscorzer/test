@@ -1,0 +1,102 @@
+version: 1
+
+project:
+  name: agentic-factory-live-test
+
+issue_tracker:
+  provider: linear
+  credential_source: local
+  # In Linear, open the target team, press Ctrl+K (Cmd+K on macOS), search for
+  # "UUID", and select the team. Repeat for the organization/workspace UUID.
+  workspace_id: "841824f3-b6cd-40b3-9a32-0e8000c6b29b"
+  team_id: "baf85ed8-19fd-41a1-8554-015bdb0d38ab"
+  # Optional stable Linear Project UUID. Keep null for team-only operation.
+  project_id: null
+  # This is the team key used in issue identifiers, not the team UUID.
+  issue_prefix: "TES"
+  readiness_label: "loop ready"
+  claim_label: "loop claimed"
+  human_decision_label: "human decision"
+  failed_label: "loop failed"
+  retryable_label: "loop retryable"
+  # Explicit provider state names are mandatory; choose them deliberately for the target team.
+  state_map:
+    implementing: "In Progress"
+    done: "Done"
+    failed: "Canceled"
+    retryable: "Todo"
+    human-decision-needed: "Backlog"
+
+source_control:
+  provider: github
+  default_branch: main
+  require_remote_checkpoint: true
+  # Required GitHub check names must match the PR status-check rollup exactly.
+  required_checks: [verify]
+  accepted_check_conclusions: [SUCCESS]
+  # Set true only for a deliberately CI-free product, and omit required_checks.
+  allow_no_ci: false
+
+execution:
+  max_concurrency: 2
+  max_review_cycles: 2
+  worktree_root: ".agentic-worktrees"
+
+cleanup:
+  enabled: false
+  completed_worktrees_enabled: true
+  review_worktrees_enabled: true
+  runtime_scratch_enabled: true
+  stale_leases_enabled: true
+  published_choices_enabled: true
+  completed_worktree_min_age_seconds: 604800
+  max_candidates: 25
+  max_bytes: 1073741824
+
+feedback:
+  collection: enabled
+  human_prompt:
+    enabled: true
+    outcomes: [delivered, abandoned, blocked]
+    unattended: disabled
+  export:
+    mode: manual
+    sink: file
+    identity: identified
+    default_selection: all-unreported
+  retention:
+    local_days: 90
+    central_days: 365
+  observability:
+    grafana: optional
+
+commands:
+  verify_fast: ["make", "verify-fast"]
+  verify: ["make", "verify"]
+  dev: ["make", "dev"]
+
+review:
+  default:
+    - code
+  label_routes:
+    "risk:ui": ["code", "ui"]
+    "risk:motion": ["code", "ui", "motion"]
+    "risk:maintainability": ["code", "maintainability"]
+    "release:large-change": ["code", "maintainability"]
+    "change:cross-cutting": ["code", "maintainability"]
+    "refactor:substantial": ["code", "maintainability"]
+    "risk:security": ["code", "security"]
+    "risk:performance": ["code", "performance"]
+    "risk:migration": ["code", "migration"]
+
+# Refinement adds concrete gaps here only after human review. Required unresolved gaps block
+# project validation/readiness; approved entries need exact skill/revision/digest/evaluation proof.
+skill_requirements: {}
+
+protected:
+  interfaces_dir: "docs/interfaces"
+  adrs_dir: "docs/adrs"
+
+artifacts:
+  specs_dir: "docs/product-specs"
+  evidence_dir: ".agentic/evidence"

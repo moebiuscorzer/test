@@ -1,0 +1,9 @@
+# agentic-orchestrator local state and configuration
+.agentic/orchestrator.local.yaml
+.agentic/choices/
+.agentic/runtime/
+.agentic/runs/
+.agentic/leases/
+.agentic/cleanup/
+.agentic/factory-feedback/
+.agentic/linear-write-preflight.json
